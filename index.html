@@ -7,11 +7,12 @@
   <title>長浜自作地図</title>
 
   <link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.7.0/dist/maplibre-gl.css"/>
-  
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.7.0/dist/maplibre-gl.css"
+  >
+
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.7.0/dist/maplibre-gl.js"></script>
-  
+
   <style>
     html, body {
       margin: 0;
@@ -33,7 +34,30 @@
 <script>
 const map = new maplibregl.Map({
   container: 'map',
-  style: 'https://demotiles.maplibre.org/style.json',
+
+  style: {
+    version: 8,
+
+    sources: {
+      "osm": {
+        type: "raster",
+        tiles: [
+          "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        ],
+        tileSize: 256,
+        attribution: "© OpenStreetMap contributors"
+      }
+    },
+
+    layers: [
+      {
+        id: "osm",
+        type: "raster",
+        source: "osm"
+      }
+    ]
+  },
+
   center: [136.265, 35.38],
   zoom: 12
 });
