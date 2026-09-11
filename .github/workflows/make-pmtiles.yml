@@ -35,7 +35,7 @@ jobs:
         run: |
           java -Xmx4g -jar planetiler.jar \
             --osm_path=osm.pbf \
-            --output=map.pmtiles
+            --output=map.pmtiles \
             --download
 
       - name: Upload PMTiles
