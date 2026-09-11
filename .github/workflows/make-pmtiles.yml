@@ -1,1 +1,38 @@
+name: OSM XML → PMTiles
 
+on:
+  workflow_dispatch:
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Osmium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osmium-tool
+
+      - name: XML → PBF
+        run: |
+          osmium cat osm.xml -o osm.pbf
+
+      - name: Download Planetiler
+        run: |
+          wget -O planetiler.jar \
+            https://github.com/onthegomap/planetiler/releases/latest/download/planetiler.jar
+
+      - name: Generate PMTiles
+        run: |
+          java -Xmx4g -jar planetiler.jar \
+            --osm_path=osm.pbf \
+            --output=map.pmtiles
+
+      - name: Upload PMTiles
+        uses: actions/upload-artifact@v4
+        with:
+          name: nagahama-map
+          path: map.pmtiles
