@@ -125,19 +125,34 @@ const map = new maplibregl.Map({
         }
       },
 
-      {
-        id: "roads",
-        type: "line",
-
-        source: "osm",
-
+    {
+      id: "roads",
+      type: "line",
+      source: "osm",
         "source-layer": "transportation",
-
-        paint: {
-          "line-color": "#ffffff",
-          "line-width": 3
-        }
+      paint: {
+        "line-color": [
+          "match",
+          ["get", "class"],
+          "motorway", "#e89292",
+          "trunk", "#e8a86b",
+          "primary", "#f0c86b",
+          "secondary", "#f3df8a",
+          "tertiary", "#ffffff",
+          "minor", "#ffffff",
+          "service", "#dddddd",
+          "#ffffff"
+        ],
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          10, 1,
+          13, 2,
+          14, 4
+        ]
       }
+    },
 
     ]
 
