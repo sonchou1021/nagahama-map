@@ -23,9 +23,10 @@ jobs:
 
       - name: Convert OSM XML to PBF
         run: |
-          java -jar planetiler.jar \
+          java -Xmx4g -jar planetiler.jar \
             --osm_path=osm.xml \
-            --output=osm.pbf
+            --output=osm.pbf \
+            --download
 
       - name: Generate PMTiles
         run: |
