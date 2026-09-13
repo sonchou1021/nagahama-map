@@ -84,6 +84,18 @@ const map = new maplibregl.Map({
       },
 
       {
+        id: "building",
+        type: "fill",
+        source: "osm",
+          "source-layer": "building",
+        minzoom: 13,
+        paint: {
+          "fill-color": "#d8d4ce",
+          "fill-outline-color": "#c5c1bb"
+        }
+      },
+
+      {
         id: "roads",
         type: "line",
 
