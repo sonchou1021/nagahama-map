@@ -28,6 +28,12 @@ jobs:
             --output=osm.pbf \
             --download
 
+      - name: Check OSM XML
+        run: |
+          ls -lh osm.xml
+          file osm.xml
+          head -n 10 osm.xml
+
       - name: Generate PMTiles
         run: |
           java -Xmx4g -jar planetiler.jar \
