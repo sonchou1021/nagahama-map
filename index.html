@@ -4,94 +4,68 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>長浜自作地図</title>
+  <title>PMTiles確認</title>
 
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.7.0/dist/maplibre-gl.css"
-  >
-
-  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.7.0/dist/maplibre-gl.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pmtiles@4.5.0/dist/pmtiles.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      word-break: break-all;
+    }
+
+    pre {
+      white-space: pre-wrap;
+    }
+  </style>
 </head>
 
-<body style="margin:0">
+<body>
 
-<div id="map" style="width:100vw;height:100vh"></div>
+<h2>PMTiles確認</h2>
+
+<div id="status">読み込み中...</div>
+
+<pre id="result"></pre>
 
 <script>
 
 const url =
   "https://sonchou1021.github.io/nagahama-map/map.pmtiles";
 
-const protocol = new pmtiles.Protocol();
-
-maplibregl.addProtocol("pmtiles", protocol.tile);
-
-const map = new maplibregl.Map({
-  container: "map",
-
-  center: [136.265, 35.38],
-  zoom: 12,
-
-  style: {
-    version: 8,
-
-    sources: {
-      osm: {
-        type: "vector",
-        url: "pmtiles://" + url
-      }
-    },
-
-    layers: [
-      {
-        id: "background",
-        type: "background",
-        paint: {
-          "background-color": "#eeeeee"
-        }
-      }
-    ]
-  }
-});
-
-map.on("load", async () => {
-
-  console.log("MapLibre: OK");
+async function check() {
 
   try {
 
     const p = new pmtiles.PMTiles(url);
 
     const header = await p.getHeader();
-
-    console.log("PMTiles header:", header);
-
     const metadata = await p.getMetadata();
 
-    console.log("PMTiles metadata:", metadata);
+    document.getElementById("status").textContent =
+      "✅ PMTiles読み込み成功";
 
-    alert(
-      "PMTilesの読み込み成功！\n\n" +
-      "ズーム範囲: " +
-      header.minZoom +
-      " ～ " +
-      header.maxZoom
-    );
+    document.getElementById("result").textContent =
+      "【Header】\n" +
+      JSON.stringify(header, null, 2) +
+      "\n\n" +
+      "【Metadata】\n" +
+      JSON.stringify(metadata, null, 2);
 
   } catch (e) {
 
-    console.error(e);
+    document.getElementById("status").textContent =
+      "❌ 読み込み失敗";
 
-    alert(
-      "PMTilesの読み込みに失敗しました。\n\n" +
-      e
-    );
+    document.getElementById("result").textContent =
+      String(e);
 
   }
 
-});
+}
+
+check();
 
 </script>
 
