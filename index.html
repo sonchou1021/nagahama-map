@@ -1,35 +1,35 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>長浜自作地図</title>
+<link rel="stylesheet"
+ href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.7.0/dist/maplibre-gl.css">
 
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.7.0/dist/maplibre-gl.css"
-  >
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.7.0/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pmtiles@4.5.0/dist/pmtiles.js"></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.7.0/dist/maplibre-gl.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/pmtiles@4.5.0/dist/pmtiles.js"></script>
-
-  <style>
-    html, body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
+<style>
+html, body, #map {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+#info {
+  position: absolute;
+  z-index: 10;
+  background: white;
+  padding: 10px;
+  font-size: 13px;
+  max-width: 90%;
+}
+</style>
 </head>
 
 <body>
 
+<div id="info">PMTilesを確認中...</div>
 <div id="map"></div>
 
 <script>
@@ -37,352 +37,115 @@
 const PMTILES_URL =
   "https://sonchou1021.github.io/nagahama-map/map.pmtiles";
 
+async function start() {
 
-// PMTilesをMapLibreで使用
-const protocol = new pmtiles.Protocol({ metadata: true });
+  const p = new pmtiles.PMTiles(PMTILES_URL);
 
-maplibregl.addProtocol("pmtiles", protocol.tile);
+  // PMTilesのヘッダーを取得
+  const h = await p.getHeader();
 
+  document.getElementById("info").innerHTML =
+    "PMTiles OK<br>" +
+    "範囲: " +
+    h.minLon.toFixed(5) + ", " +
+    h.minLat.toFixed(5) + " ～ " +
+    h.maxLon.toFixed(5) + ", " +
+    h.maxLat.toFixed(5) + "<br>" +
+    "中心: " +
+    h.centerLon.toFixed(5) + ", " +
+    h.centerLat.toFixed(5) + "<br>" +
+    "Zoom: " + h.minZoom + " ～ " + h.maxZoom;
 
-// 地図
-const map = new maplibregl.Map({
+  // PMTilesをMapLibreに接続
+  const protocol = new pmtiles.Protocol();
+  maplibregl.addProtocol("pmtiles", protocol.tile);
 
-  container: "map",
+  // PMTiles自身が持っている中心座標を使用
+  const map = new maplibregl.Map({
+    container: "map",
 
-  center: [136.265, 35.38],
+    center: [
+      h.centerLon,
+      h.centerLat
+    ],
 
-  zoom: 12,
+    zoom: Math.max(12, h.minZoom),
 
-  style: {
+    style: {
+      version: 8,
 
-    version: 8,
-
-    sources: {
-
-      osm: {
-        type: "vector",
-        url: "pmtiles://" + PMTILES_URL
-      }
-
-    },
-
-    layers: [
-
-      // =========================
-      // 背景
-      // =========================
-
-      {
-        id: "background",
-        type: "background",
-
-        paint: {
-          "background-color": "#f3f0e8"
+      sources: {
+        osm: {
+          type: "vector",
+          url: "pmtiles://" + PMTILES_URL
         }
       },
 
+      layers: [
 
-      // =========================
-      // 土地利用
-      // =========================
-
-      {
-        id: "landuse",
-        type: "fill",
-
-        source: "osm",
-        "source-layer": "landuse",
-
-        paint: {
-          "fill-color": [
-            "match",
-            ["get", "class"],
-
-            "park", "#dcebd3",
-            "wood", "#d6e6c8",
-            "cemetery", "#e1ead9",
-            "hospital", "#f0e0e0",
-            "school", "#eee5c8",
-
-            "#e8e4da"
-          ],
-
-          "fill-opacity": 0.7
-        }
-      },
-
-
-      // =========================
-      // 水域
-      // =========================
-
-      {
-        id: "water",
-        type: "fill",
-
-        source: "osm",
-        "source-layer": "water",
-
-        paint: {
-          "fill-color": "#a9d7e8"
-        }
-      },
-
-
-      // =========================
-      // 河川
-      // =========================
-
-      {
-        id: "waterway",
-        type: "line",
-
-        source: "osm",
-        "source-layer": "waterway",
-
-        paint: {
-          "line-color": "#8fc9df",
-          "line-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            10, 0.5,
-            12, 1,
-            14, 2
-          ]
-        }
-      },
-
-
-      // =========================
-      // 道路
-      // =========================
-
-      {
-        id: "roads",
-
-        type: "line",
-
-        source: "osm",
-        "source-layer": "transportation",
-
-        paint: {
-
-          "line-color": "#ffffff",
-
-          "line-width": [
-
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-
-            7, 0.5,
-            10, 1,
-            12, 2,
-            13, 3,
-            14, 5
-
-          ]
-
-        }
-      },
-
-
-      // =========================
-      // 道路の縁
-      // =========================
-
-      {
-        id: "roads-outline",
-
-        type: "line",
-
-        source: "osm",
-        "source-layer": "transportation",
-
-        paint: {
-
-          "line-color": "#c8c4bc",
-
-          "line-width": [
-
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-
-            10, 1,
-            12, 2.5,
-            13, 4,
-            14, 6
-
-          ]
-
-        }
-      },
-
-
-      // =========================
-      // 建物
-      // =========================
-
-      {
-        id: "building",
-
-        type: "fill",
-
-        source: "osm",
-        "source-layer": "building",
-
-        minzoom: 13,
-
-        paint: {
-
-          "fill-color": "#d7d2c9",
-
-          "fill-outline-color": "#c2bdb5"
-
-        }
-      },
-
-
-      // =========================
-      // 道路名
-      // =========================
-
-      {
-        id: "road-names",
-
-        type: "symbol",
-
-        source: "osm",
-        "source-layer": "transportation_name",
-
-        minzoom: 12,
-
-        layout: {
-
-          "text-field": [
-            "coalesce",
-            ["get", "name:ja"],
-            ["get", "name"]
-          ],
-
-          "text-size": 11,
-
-          "symbol-placement": "line"
-
+        {
+          id: "background",
+          type: "background",
+          paint: {
+            "background-color": "#eeeeee"
+          }
         },
 
-        paint: {
-
-          "text-color": "#555555",
-
-          "text-halo-color": "#ffffff",
-
-          "text-halo-width": 1
-
-        }
-
-      },
-
-
-      // =========================
-      // 地名
-      // =========================
-
-      {
-        id: "places",
-
-        type: "symbol",
-
-        source: "osm",
-        "source-layer": "place",
-
-        minzoom: 14,
-
-        layout: {
-
-          "text-field": [
-            "coalesce",
-            ["get", "name:ja"],
-            ["get", "name"]
-          ],
-
-          "text-size": 14
-
+        {
+          id: "water",
+          type: "fill",
+          source: "osm",
+          "source-layer": "water",
+          paint: {
+            "fill-color": "#aadaff"
+          }
         },
 
-        paint: {
-
-          "text-color": "#333333",
-
-          "text-halo-color": "#ffffff",
-
-          "text-halo-width": 1.5
-
-        }
-
-      },
-
-
-      // =========================
-      // POI
-      // =========================
-
-      {
-        id: "poi",
-
-        type: "symbol",
-
-        source: "osm",
-        "source-layer": "poi",
-
-        minzoom: 14,
-
-        layout: {
-
-          "text-field": [
-            "coalesce",
-            ["get", "name:ja"],
-            ["get", "name"]
-          ],
-
-          "text-size": 11
-
+        {
+          id: "landuse",
+          type: "fill",
+          source: "osm",
+          "source-layer": "landuse",
+          paint: {
+            "fill-color": "#dddddd",
+            "fill-opacity": 0.5
+          }
         },
 
-        paint: {
-
-          "text-color": "#444444",
-
-          "text-halo-color": "#ffffff",
-
-          "text-halo-width": 1
-
+        {
+          id: "roads",
+          type: "line",
+          source: "osm",
+          "source-layer": "transportation",
+          paint: {
+            "line-color": "#ffffff",
+            "line-width": 3
+          }
         }
 
-      }
+      ]
+    }
+  });
 
-    ]
+  map.addControl(new maplibregl.NavigationControl());
 
-  }
+  map.on("error", function(e) {
+    console.log(e);
+    document.getElementById("info").innerHTML +=
+      "<br><b>MAP ERROR:</b><br>" +
+      JSON.stringify(e.error);
+  });
+}
+
+start().catch(function(e) {
+
+  document.getElementById("info").innerHTML =
+    "<b>エラー</b><br>" +
+    e.message;
+
+  console.error(e);
 
 });
-
-
-// ナビゲーション
-map.addControl(
-  new maplibregl.NavigationControl(),
-  "top-right"
-);
-
-
-// OSM attribution
-map.addControl(
-  new maplibregl.AttributionControl({
-    compact: true
-  })
-);
 
 </script>
 
