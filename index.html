@@ -13,163 +13,86 @@
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.7.0/dist/maplibre-gl.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pmtiles@4.5.0/dist/pmtiles.js"></script>
-
-  <style>
-    html, body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
 </head>
 
-<body>
+<body style="margin:0">
 
-<div id="map"></div>
+<div id="map" style="width:100vw;height:100vh"></div>
 
 <script>
-  // PMTilesをMapLibreで読めるようにする
-  const protocol = new pmtiles.Protocol({ metadata: true });
-  maplibregl.addProtocol("pmtiles", protocol.tile);
 
-  // 自作PMTiles
-  const PMTILES_URL =
-    "https://sonchou1021.github.io/nagahama-map/map.pmtiles";
+const url =
+  "https://sonchou1021.github.io/nagahama-map/map.pmtiles";
 
-  const map = new maplibregl.Map({
-    container: "map",
+const protocol = new pmtiles.Protocol();
 
-    center: [136.265, 35.38],
-    zoom: 12,
+maplibregl.addProtocol("pmtiles", protocol.tile);
 
-    style: {
-      version: 8,
+const map = new maplibregl.Map({
+  container: "map",
 
-      sources: {
-        osm: {
-          type: "vector",
-          url: "pmtiles://" + PMTILES_URL,
-          attribution:
-            "© OpenStreetMap contributors © OpenMapTiles"
+  center: [136.265, 35.38],
+  zoom: 12,
+
+  style: {
+    version: 8,
+
+    sources: {
+      osm: {
+        type: "vector",
+        url: "pmtiles://" + url
+      }
+    },
+
+    layers: [
+      {
+        id: "background",
+        type: "background",
+        paint: {
+          "background-color": "#eeeeee"
         }
-      },
+      }
+    ]
+  }
+});
 
-      layers: [
+map.on("load", async () => {
 
-        // 背景
-        {
-          id: "background",
-          type: "background",
-          paint: {
-            "background-color": "#f2efe9"
-          }
-        },
+  console.log("MapLibre: OK");
 
-        // 水域
-        {
-          id: "water",
-          type: "fill",
-          source: "osm",
-          "source-layer": "water",
-          paint: {
-            "fill-color": "#a8d8ea"
-          }
-        },
+  try {
 
-        // 土地利用
-        {
-          id: "landuse",
-          type: "fill",
-          source: "osm",
-          "source-layer": "landuse",
-          paint: {
-            "fill-color": "#e5eadf",
-            "fill-opacity": 0.7
-          }
-        },
+    const p = new pmtiles.PMTiles(url);
 
-        // 建物
-        {
-          id: "building",
-          type: "fill",
-          source: "osm",
-          "source-layer": "building",
-          minzoom: 13,
-          paint: {
-            "fill-color": "#d8d2c8",
-            "fill-outline-color": "#c5bfb5"
-          }
-        },
+    const header = await p.getHeader();
 
-        // 道路
-        {
-          id: "roads",
-          type: "line",
-          source: "osm",
-          "source-layer": "transportation",
-          paint: {
-            "line-color": "#ffffff",
-            "line-width": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              10, 0.5,
-              12, 1,
-              14, 2,
-              16, 5
-            ]
-          }
-        },
+    console.log("PMTiles header:", header);
 
-        // 道路名
-        {
-          id: "road-names",
-          type: "symbol",
-          source: "osm",
-          "source-layer": "transportation_name",
-          minzoom: 13,
-          layout: {
-            "text-field": ["get", "name"],
-            "text-size": 11
-          },
-          paint: {
-            "text-color": "#555555",
-            "text-halo-color": "#ffffff",
-            "text-halo-width": 1
-          }
-        },
+    const metadata = await p.getMetadata();
 
-        // 地名
-        {
-          id: "places",
-          type: "symbol",
-          source: "osm",
-          "source-layer": "place",
-          layout: {
-            "text-field": ["get", "name"],
-            "text-size": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              10, 10,
-              14, 14
-            ]
-          },
-          paint: {
-            "text-color": "#333333",
-            "text-halo-color": "#ffffff",
-            "text-halo-width": 1.5
-          }
-        }
+    console.log("PMTiles metadata:", metadata);
 
-      ]
-    }
-  });
+    alert(
+      "PMTilesの読み込み成功！\n\n" +
+      "ズーム範囲: " +
+      header.minZoom +
+      " ～ " +
+      header.maxZoom
+    );
+
+  } catch (e) {
+
+    console.error(e);
+
+    alert(
+      "PMTilesの読み込みに失敗しました。\n\n" +
+      e
+    );
+
+  }
+
+});
+
 </script>
 
 </body>
