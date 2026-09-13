@@ -1,35 +1,31 @@
-name: OSM XML → PMTiles
+name: Make Nagoya PMTiles
 
 on:
   workflow_dispatch:
 
 jobs:
-  convert:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Osmium
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y osmium-tool
-
-      - name: XML → PBF
-        run: |
-          osmium cat osm.xml -o osm.pbf
-
       - name: Set up Java 21
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
-          
+
       - name: Download Planetiler
         run: |
-          wget -O planetiler.jar \
-            https://github.com/onthegomap/planetiler/releases/latest/download/planetiler.jar
+          wget https://github.com/onthegomap/planetiler/releases/download/v0.10.2/planetiler.jar
+
+      - name: Convert OSM XML to PBF
+        run: |
+          java -jar planetiler.jar \
+            --osm_path=osm.xml \
+            --output=osm.pbf
 
       - name: Generate PMTiles
         run: |
@@ -41,5 +37,5 @@ jobs:
       - name: Upload PMTiles
         uses: actions/upload-artifact@v4
         with:
-          name: nagahama-map
+          name: nagoya-map
           path: map.pmtiles
