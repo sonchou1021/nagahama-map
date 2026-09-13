@@ -174,7 +174,32 @@ const map = new maplibregl.Map({
     		"text-halo-color": "#ffffff",
     		"text-halo-width": 1.5
   		}
-		}
+		},
+
+    {
+      id: "place-labels",
+      type: "symbol",
+      source: "osm",
+        "source-layer": "place",
+
+      layout: {
+        "text-field": ["get", "name"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          10, 10,
+          13, 14,
+          14, 16
+        ]
+      },
+
+      paint: {
+        "text-color": "#333333",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 2
+      }
+    }
       
     ]
   }
